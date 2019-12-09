@@ -22,13 +22,18 @@ else:
 def main ():
   start= time.time()
 
+  print(sys.argv)
+  
   if len(sys.argv)>=2:
     parameter_file=sys.argv[1]
   else:
-    Tk().withdraw() 
-    parameter_file=askopenfilename(title="Choose parameter file")  
-
-    
+    try:
+      Tk().withdraw() 
+      parameter_file=askopenfilename(title="Choose parameter file")  
+    except:
+      print("Window interface not available. Please entre a parameter file.")
+      sys.exit(0)
+      
   if len(parameter_file)==0:
     print("Missing parameter file.")
     sys.exit(0)
