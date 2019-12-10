@@ -22,8 +22,6 @@ else:
 def main ():
   start= time.time()
 
-  print(sys.argv)
-  
   if len(sys.argv)>=3:
     parameter_file=sys.argv[1]+"/"+sys.argv[2]
   else:

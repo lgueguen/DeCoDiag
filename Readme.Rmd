@@ -1,6 +1,5 @@
-
-# DecoDiag: Diagnostic of gene families from the incoherences in
-  ancetral genomes
+# DecoDiag: Compute diagnostics of gene families from the incoherences
+  in ancestral genomes
 
 From repository src, docker container is built with command:
 
@@ -19,8 +18,11 @@ Docker is run through script (logged in as root):
 Docker/launch_docker.bash [working directory [parameter file]]
 ```
 
-If parameter file argument is void, window interface is opened to ask
+If parameter file argument is void, window interface is opened to ask.
 
 if working directory argument is void, actual directory is used as
-working directory
+working directory.
+
+
+
 
