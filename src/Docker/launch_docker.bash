@@ -24,7 +24,8 @@ fi
 
 docker run -it -e DISPLAY=$DISPLAY -e USER=$USER -e LOCAL_USER_ID=`id -u $USER` \
        -v /tmp/.X11-unix:/tmp/.X11-unix -v $DATA_DIR:/app/$ATTACH_DIR \
-       -e PARAM_FILE=/app/$ATTACH_DIR/$2 \
+       -e PARAM_FILE=$2 -e DATA_DIR=/app/$ATTACH_DIR \
        --cpus 1 \
        --rm --name DeCo anal_dock
+
 

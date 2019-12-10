@@ -24,8 +24,8 @@ def main ():
 
   print(sys.argv)
   
-  if len(sys.argv)>=2:
-    parameter_file=sys.argv[1]
+  if len(sys.argv)>=3:
+    parameter_file=sys.argv[1]+"/"+sys.argv[2]
   else:
     try:
       Tk().withdraw() 

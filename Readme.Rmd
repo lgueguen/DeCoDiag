@@ -16,6 +16,11 @@ docker pull lgueguen/DecoDiag
 Docker is run through script (logged in as root):
 
 ```{sh}
-Docker/launch_docker.bash
+Docker/launch_docker.bash [working directory [parameter file]]
 ```
+
+If parameter file argument is void, window interface is opened to ask
+
+if working directory argument is void, actual directory is used as
+working directory
 
