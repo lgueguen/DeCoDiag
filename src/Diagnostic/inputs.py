@@ -50,7 +50,8 @@ def read_param (param_file) :
   """ Parsing of parameter file of DeCoSTAR. """
 
   param={}
-  
+
+  print(os.getcwd())
   f=open(param_file,"r")
   for l in f.readlines():
     if l.find("=")!=-1:
