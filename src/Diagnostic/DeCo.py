@@ -23,7 +23,8 @@ def main ():
   start= time.time()
 
   if len(sys.argv)>=3:
-    parameter_file=sys.argv[1]+"/"+sys.argv[2]
+    wd_dir=sys.argv[1]
+    parameter_file=sys.argv[2]
   else:
     try:
       Tk().withdraw() 
@@ -36,9 +37,11 @@ def main ():
     print("Missing parameter file.")
     sys.exit(0)
 
-    
-  os.chdir(os.path.dirname(parameter_file))
-  
+  if os.path.isdir(wd_dir):
+      os.chdir(wd_dir)
+  else:
+    os.chdir(os.path.dirname(wd_dir))
+
   choice=input('Use DeCoSTAR ? (y/n) :')
   
   if choice=='y':                           

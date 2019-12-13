@@ -5,23 +5,36 @@ import ete3
 import glob
 import sys
 
-def get_broken_families(anc):  
+def get_par_fam(anc):  
+  """ Get 6-cycles with 2 families present at least 2 times."""
   c6=anc.get_cycles(6)
-  d6={lfam:{sp:[anc.get_graph(sp).degree(gene) for gene in genes] for sp,genes in dicfam.items()} for lfam,dicfam in c6.items()}
 
   # 6-cycles with nb of occurences for each fam
-  dlen6={lfam:{fam:len([v for v in lfam if v==fam]) for fam in lfam} for lfam in d6}
+  dlen6={lfam:{fam:len([v for v in lfam if v==fam]) for fam in lfam} for lfam in c6}
   # get 6-cycles with 2 families present at least 2 times
   d6_2_deg={lfam:min(v.values()) for lfam,v in d6.items() if len([g for g in dlen6[lfam].values() if g>=2])==2}  
   return d6_2_deg
 
-def output_broken_families(d6_2_deg):
-  d6_2_count={lfam:{fam:len([w for w in lfam if w==fam]) for fam in lfam} for lfam in d6_2_deg}
-  str6_2="\n".join(["\t".join(map(str,[w for w in count if count[w]>=2]))+"\t:\t"+"\t".join(map(str,[w for w in count if count[w]==1])) for count in d6_2_count.values()])
-  return(str6_2)
-
-def get_dup_families(anc):  
+def get_dup_fam(anc):  
+  """ Get 6-cycles exactly one family present at least 4 times."""
   c6=anc.get_cycles(6)
+
+  # 6-cycles with nb of occurences for each fam
+  dlen6={lfam:{fam:len([v for v in lfam if v==fam]) for fam in lfam} for lfam in c6}
+  # get 6-cycles exactly one family present at least 4 times
+  d6_2_deg={lfam:min(v.values()) for lfam,v in d6.items() if len([g for g in dlen6[lfam].values() if g>=4])==1}  
+  return d6_2_deg
+
+
+def get_dup_fam_species(anc):  
+  """Get families in 6-cycles with two occurences of a same gene (ie at
+least 4 ends), associated with list of species where there is the
+6-cycle."""
+  
+  c6=anc.get_cycles(6)
+
+  # 6-cycles with {species:degree of gene} for each fam
+  
   d6={fam:{sp:[anc.get_graph(sp).degree(gene) for gene in genes] for sp,genes in dicfam.items()} for fam,dicfam in c6.items()}
 
   # 6-cycles with nb of occurences for each fam
@@ -36,7 +49,24 @@ def get_dup_families(anc):
 
   return d6_4_sp
 
-def output_dup_families(d6_4_sp):
+def simple_cycles(d6_2_deg):
+  """ filter in cycles with pattern [3,2,2,3,2,2]."""
+  d6_simp={k:v for k,v in d6_2_deg.items() if sorted(v)==[2,2,2,2,3,3]}
+  
+###########
+### Output
+
+def output(d6_2_deg):
+  d6_2_count={lfam:{fam:len([w for w in lfam if w==fam]) for fam in lfam} for lfam in d6_2_deg}
+  str6_2="\n".join(["\t".join(map(str,[w for w in count if count[w]>=2]))+"\t:\t"+"\t".join(map(str,[w for w in count if count[w]==1])) for count in d6_2_count.values()])
+  return(str6_2)
+
+# def output_cycles6(d6_2_deg):
+#   d6_2_count={lfam:{fam:len([w for w in lfam if w==fam]) for fam in lfam} for lfam in d6_2_deg}
+#   str6_2="\n".join(["\t".join(map(str,[w for w in count if count[w]>=2]))+"\t:\t"+"\t".join(map(str,[w for w in count if count[w]==1])) for count in d6_2_count.values()])
+#   return(str6_2)
+
+def output_species_dup_fam(d6_4_sp):
   str6_dup="\n".join([str(fam)+"\t"+"\t".join(map(str,sp)) for fam,sp in d6_4_sp.items()])
   return str6_dup
 
@@ -103,16 +133,16 @@ def zip1dup(geneTree, dup_nodes, spec_tree):
 # spec_tree_nf="../instance_test_Docker/Anopheles_species_tree_X_topology.nwk"
 
 ## get repertory of gene trees (to avoid loading everything)
-## and an output of get_dup_families {fam number: ids of species node to zip}
+## and an output of get_dup_fam_species {fam number: ids of species node to zip}
 ##
 ## return dict {family number:zipped ete3 gene Tree}
 
-def zip_dup(dict_dup_families, gene_tree_file, spec_tree):
+def zip_dup(dict_dup_fam, gene_tree_file, spec_tree):
   ftree=open(gene_tree_file,"r")
   itf=sorted(map(lambda x:x.strip(),ftree.readlines()))
   ftree.close()
 
-  famnum=list(dict_dup_families.keys())
+  famnum=list(dict_dup_fam.keys())
   famnum.sort()
   dupTrees={}
   dupNames={}
@@ -130,11 +160,11 @@ def zip_dup(dict_dup_families, gene_tree_file, spec_tree):
   dcorTree={}
   for dTk in dupTrees:
     try:
-      dcorTree[dTk]=zip1dup(dupTrees[dTk], dict_dup_families[dTk], spec_tree)
+      dcorTree[dTk]=zip1dup(dupTrees[dTk], dict_dup_fam[dTk], spec_tree)
     except:
       print(dTk)
       print(dupTrees[dTk])
-      print(dict_dup_families[dTk])
+      print(dict_dup_fam[dTk])
       print(lnodes)
       
   return(dcorTree)

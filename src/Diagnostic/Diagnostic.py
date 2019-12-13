@@ -56,13 +56,18 @@ class Diagnostic:
 
 
   ## get 6-cycles without duplications to try clustering
-  def output_broken_families_in_cycles6(self):
-    c6br=cycles6.get_broken_families(self.anc)
-    return cycles6.output_broken_families(c6br)
+  def output_par_fam_in_cycles6(self):
+    c6br=cycles6.get_par_fam(self.anc)
+    return cycles6.output(c6br)
+
+  ## get 6-cycles without duplications to try clustering
+  def output_duplicated_fam_in_cycles6(self):
+    c6dup=cycles6.get_dup_fam(self.anc)
+    return cycles6.output(c6dup)
 
   ## Zip (one step) all cycle6 with duplications
   def zip_cycles6_dup(self):
-    c6dup=cycles6.get_dup_families(self.anc)
+    c6dup=cycles6.get_dup_fam_species(self.anc)
     zipfam=cycles6.zip_dup(c6dup, self.dfile["gene.distribution.file"], self.species_tree)
     return(zipfam)
 
@@ -126,55 +131,75 @@ class Diagnostic:
     paramf.close()
 
 
-
 #def main():
-if len(sys.argv)>=2:
+if len(sys.argv)>=3:
+  param_file=os.path.join(sys.argv[1],sys.argv[2])
+elif len(sys.argv)>=2:
   param_file=sys.argv[1]
 else:
   Tk().withdraw() 
   param_file=askopenfilename()  
 
-os.chdir(os.path.dirname(param_file))
+if len(os.path.dirname(param_file))!=0:
+  os.chdir(os.path.dirname(param_file))
 
-diag=Diagnostic(param_file)
+diag=Diagnostic(os.path.basename(param_file))
 diag.build_ancestral()
 
 print(diag.anc)
 
 
 ######################
-## zip 6-cycles with duplications
+## Work on 6-cycles
 
-choice=input('Build new trees ? (y/n) : ')
-  
-if choice=='y':                   
-  new_directory=input('Name of the new directory for trees ? : ')
-  # while os.path.exists(new_directory):
-  #   print("This directory already exists.")
-  #   new_directory=input('Name of the new directory for trees ? : ')
+ch6c= input("Working on 6-cycles? (y/n): ")
+
+if (ch6c=="y"):
+
+  ######################
+  ## get 6-cycles with duplications to clustering
+
+  chdup=input('Get duplicated families in 6-cycles ? (y/n) : ')
     
-  zipfam=diag.zip_cycles6_dup()
+  if chdup=='y':                   
+    dup_file=input('Name of the file for duplicated families ? : ')
+
+    fdup=open(dup_file,"w")
+    fdup.write(diag.output_duplicated_fam_in_cycles6())
+    fdup.close()
+  ######################
+  # zip 6-cycles with duplications
+
+  chzip=input('Zip trees with duplicated families? (y/n): ')
   
-  new_config_file=diag.increment_suffix_in_param_file("gene.distribution.file")
-  diag.output_gene_trees(zipfam, new_directory, new_config_file)
-  diag.dfile["gene.distribution.file"]=new_config_file
-  diag.new_param_file()
+  if chzip=='y':                   
+    new_directory=input('Name of the new directory for trees ? : ')
+    # while os.path.exists(new_directory):
+    #   print("This directory already exists.")
+    #   new_directory=input('Name of the new directory for trees ? : ')
+    
+    zipfam=diag.zip_cycles6_dup()
+  
+    new_config_file=diag.increment_suffix_in_param_file("gene.distribution.file")
+    diag.output_gene_trees(zipfam, new_directory, new_config_file)
+    diag.dfile["gene.distribution.file"]=new_config_file
+    diag.new_param_file()
   
 
-######################
-## get 6-cycles without duplications to try clustering
+  ######################
+  ## get 6-cycles without duplications to try clustering
 
-choice=input('Get parallel families in 6-cycles ? (y/n) : ')
-  
-if choice=='y':                   
-  br_file=input('Name of the file for broken families ? : ')
-  # while os.path.exists(br_file):
-  #   print("This file already exists.")
-  #   br_file=input('Name of the file for broken families ? : ')
+  chpar=input('Get parallel families in 6-cycles ? (y/n) : ')
+    
+  if chpar=='y':                   
+    br_file=input('Name of the file for parallel families ? : ')
+    # while os.path.exists(br_file):
+    #   print("This file already exists.")
+    #   br_file=input('Name of the file for broken families ? : ')
 
-  fbr=open(br_file,"w")
-  fbr.write(diag.output_broken_families_in_cycles6())
-  fbr.close()
+    fbr=open(br_file,"w")
+    fbr.write(diag.output_par_fam_in_cycles6())
+    fbr.close()
 
   
 # if __name__=="__main__":
