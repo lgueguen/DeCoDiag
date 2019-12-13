@@ -23,14 +23,17 @@ def main ():
   start= time.time()
 
   if len(sys.argv)>=3:
-    parameter_file=sys.argv[1]+"/"+sys.argv[2]
-  else:
-    try:
-      Tk().withdraw() 
-      parameter_file=askopenfilename(title="Choose parameter file")  
-    except:
-      print("Window interface not available. Please entre a parameter file.")
-      sys.exit(0)
+    parameter_file=os.path.join(sys.argv[1],sys.argv[2])
+  elif len(sys.argv)==1:
+    if os.path.isfile(sys.argv[1]):
+      parameter_file=os.path.join(sys.argv[1])
+    else:
+      try:
+        Tk().withdraw() 
+        parameter_file=askopenfilename(title="Choose parameter file")  
+      except:
+        print("Window interface not available. Please entre a parameter file.")
+        sys.exit(0)
       
   if len(parameter_file)==0:
     print("Missing parameter file.")
@@ -44,7 +47,7 @@ def main ():
   if choice=='y':                           
     f= path + "/DeCoSTAR parameter.file="+parameter_file  
     subprocess.call(f, shell=True)
-  
+
   print("Diagnostic in process ...")
   subprocess.call(['python3', path + '/Diagnostic.py', parameter_file])
 

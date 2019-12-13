@@ -20,18 +20,16 @@ import cycles6
 class Diagnostic:
   def __init__(self, param_file):
 
+    print(param_file)
     # dict of param files
     self.dfile=inputs.read_param(param_file)
     self.dfile["param.file"]=param_file.split(os.sep)[-1]
     
     # Get species_tree
     directory=self.dfile["output.dir"]
-    if directory[-1]!=os.sep:
-      directory+=os.sep
-
     prefix=self.dfile["output.prefix"]
 
-    f=open(directory+prefix+".speciesTree.newick","r")
+    f=open(os.path.join(directory,prefix+".speciesTree.newick"),"r")
     l=f.readline()
     f.close()
     self.species_tree=Tree(l)
@@ -49,10 +47,8 @@ class Diagnostic:
   ## Build ancestral graphs
   def build_ancestral(self):
     directory=self.dfile["output.dir"]
-    if directory[-1]!=os.sep:
-      directory+=os.sep
     prefix=self.dfile["output.prefix"]
-    self.anc= ancestral.Ancestral(directory + prefix + ".genes.txt", self.species_tree, directory + prefix + ".adjacencies.txt")
+    self.anc= ancestral.Ancestral(os.path.join(directory,prefix + ".genes.txt"), self.species_tree, os.path.join(directory, prefix + ".adjacencies.txt"))
 
 
   ## get 6-cycles without duplications to try clustering
@@ -76,9 +72,6 @@ class Diagnostic:
     if not os.path.exists(new_directory):
       os.mkdir(new_directory)
     
-    if new_directory[-1]!=os.sep:
-      new_directory+=os.sep
-    
     gene_tree_file=self.dfile["gene.distribution.file"]
     ftree=open(gene_tree_file,"r")
     itf=sorted(map(lambda x:x.strip(),ftree.readlines()))
@@ -90,7 +83,7 @@ class Diagnostic:
     
     for numtree in range(len(itf)):
       if ik<len(keys) and numtree==keys[ik]:
-        new_file=new_directory+itf[numtree][itf[numtree].rfind(os.sep)+1:]
+        new_file=os.path.join(new_directory,itf[numtree][itf[numtree].rfind(os.sep)+1:])
         gene_trees[numtree].write(format=9,outfile=new_file)
         ik+=1
       else:
@@ -134,9 +127,11 @@ else:
   Tk().withdraw() 
   param_file=askopenfilename()  
 
-os.chdir(os.path.dirname(param_file))
+if os.path.exists(param_file):
+  os.chdir(os.path.dirname(param_file))
 
-diag=Diagnostic(param_file)
+print(" " + os.path.split(param_file)[1])
+diag=Diagnostic(os.path.split(param_file)[1])
 diag.build_ancestral()
 
 print(diag.anc)
