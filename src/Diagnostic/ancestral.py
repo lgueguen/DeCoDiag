@@ -1,21 +1,28 @@
 #!/usr/bin/python3
 #coding:utf8
 
+import sys
 import re
 import networkx as nx
 
-import inputs
+import iO
 import functools
 
 #  Categorization of cycle, for a given set of families
 #  Inherits from dict as (species,lists of genes)
 
 class Cycle(dict):
-  def __init__(self, fam):
+  def __init__(self, fam, graph):
     self.fam=fam
-		
+    self.graph=graph
+    self.compute_degree()
+    
+  def compute_degree(self):
+    """ computes degree of genes for all species."""
+    self.deg={sp:[self.graph[sp].degree(gene) for gene in genes] for sp,genes in self.items()}
 
-
+  
+    
 def check_singleton(graph, gene):
   """
   Identification if is singleton
@@ -94,21 +101,21 @@ class Ancestral:
     graph=self.__dic_graph
     nbconflit=0
     for species in graph.keys():
-      deg = graph[species].degree()
-      nbconflit+=functools.reduce(lambda n,d: n+(d[1]>2), deg, 0)
+      deg = list(graph[species].degree().values())
+      nbconflit+=functools.reduce(lambda n,d: n+(d>2), deg, 0)
 
     return nbconflit
 
   def list_conflicts(self): 
     """
-    Return dictionnary {species: list of genes with conflicts}.
+    Return dictionary {species: list of genes with conflicts}.
     """
     graph=self.__dic_graph
     nbconflit=0
     dconf={}
     for species in graph.keys():
       deg = graph[species].degree()
-      dconf[species]=[d[0] for d in deg if d[1]>2]
+      dconf[species]=[d for d,v in deg.items() if v>2]
       
     return dconf
 
@@ -133,7 +140,7 @@ class Ancestral:
         sing=function(graph,node)
       
         if len(sing)!=0:
-          family=inputs.find_family(node,self.__dic_gene)
+          family=iO.find_family(node,self.__dic_gene)
           if family in dicsp.keys():
             if not species in dicsp[family]:
               dicsp[family].append(species)
@@ -168,7 +175,7 @@ class Ancestral:
     for leng in lengths:
       dtri0={sp:[x for x in cysp if len(x)==leng] for sp,cysp in cycles.items()}
       dtri={sp:l for sp,l in dtri0.items() if len(l)>0}
-      dtrifam={sp:[inputs.find_families(tri,self.dic_gene()) for tri in ltri] for sp,ltri in dtri.items()}
+      dtrifam={sp:[iO.find_families(tri,self.dic_gene()) for tri in ltri] for sp,ltri in dtri.items()}
       fr = functools.reduce(lambda x,y:x+y, dtrifam.values())
       dfam=set([x[0] for x in fr])
       
@@ -176,7 +183,7 @@ class Ancestral:
       cycleng=self.__cycles[leng]
       
       for fam in dfam:
-        cycleng[fam]=Cycle(fam)
+        cycleng[fam]=Cycle(fam, self.dic_graph())
       
         for sp,vsp in dtrifam.items():
           for v in vsp:
@@ -192,19 +199,19 @@ class Ancestral:
     return self.__cycles[length]
 
   def __str__(self):
-    dres={}
-    dres["Conflicts"]=self.nb_conflict();
+    dres=[]
+    dres.append(["Conflicts",self.nb_conflict()])
       
-    dres["Unique singletons"]=len(self.sing[0])
-    dres["Singletons"]= sum(len(k) for k in self.sing[0].values())
+    dres.append(["Unique singletons",len(self.sing[0])])
+    dres.append(["Singletons",sum(len(k) for k in self.sing[0].values())])
     
-    dres["Unique OEN"]= len(self.OEN[0])
-    dres["OEN"]= sum(len(k) for k in self.OEN[0].values())
+    dres.append(["Unique OEN",len(self.OEN[0])])
+    dres.append(["OEN",sum(len(k) for k in self.OEN[0].values())])
 
-    for lc in self.cycle_lengths():
-      dres["cycle %d"%lc]=len(self.get_cycles(lc))
+    for lc in sorted(self.cycle_lengths()):
+      dres.append(["cycle %d"%lc,len(self.get_cycles(lc))])
     
-    return("\n".join([k+" \t"+str(v) for k,v in dres.items()]))
+    return("\n".join([k+" \t"+str(v) for [k,v] in dres]))
 
   #Parsing of DeCoSTAR files
   def __get_dic_gene(self, fgenes):

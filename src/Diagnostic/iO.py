@@ -6,6 +6,15 @@ import os
 import ete3
 import glob
 
+# For convenient join
+# Built-in namespace
+#import __builtin__
+
+# Extended subclass
+def joinstr(sep, liste):
+  return sep.join(map(str, liste))
+
+
 def find_family(gene, dic_gene):
   """
   from (gene,end) name to (family,end)
@@ -51,7 +60,6 @@ def read_param (param_file) :
 
   param={}
 
-  print(os.getcwd())
   f=open(param_file,"r")
   for l in f.readlines():
     if l.find("=")!=-1:
@@ -69,3 +77,19 @@ def read_param (param_file) :
   return(param)
 
   
+def output_genes_sp(cycles, dg):
+  """Ouput string from cycles with focused genes in format "focused
+  genes : other genes [species with the cycle]".
+
+  param: whole dictionnary of cycles of interest 
+  param: dictionnary {lfam:list of focused genes} in the studied cycles
+  """
+  
+  dout={lfam:[dg[lfam],[g for g in lfam if not g in dg[lfam]],list(cycles[lfam].keys())] for lfam in cycles if lfam in dg}
+
+  if len(dout)!=0:
+    strout="\n".join([joinstr(" ",sorted(ll[0])) + "\t:\t" + joinstr(" ",sorted(ll[1])) + "\t[" + joinstr(" ",sorted(ll[2]))+"]" for ll in dout.values()])+"\n"
+  else:
+    strout=""
+  return(strout)
+
