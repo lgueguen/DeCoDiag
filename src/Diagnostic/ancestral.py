@@ -89,7 +89,35 @@ class Ancestral:
 
   def get_graph(self, sp):
     return self.dic_graph()[sp]
-  
+
+  def __read_genes(self, gene_file):
+    f = open(gene_file, "r")
+    for i in f.readlines():
+      line = i.split()
+      self.__dic_graph[int(line[0])].add_node((line[1],'start'))
+      self.__dic_graph[int(line[0])].add_node((line[1],'stop'))
+      self.__dic_graph[int(line[0])].add_edge((line[1],'start'),(line[1],'stop'),eq_class="gene", edge_type="gene", weight = 1)
+    f.close()
+    if len(self.__dic_graph)==0:
+      raise Exception("No genes in " + gene_file)
+    
+  def __get_dic_gene(self, fgenes):
+    """
+    Dictionnary of genes as {leaf label : gene family number}
+    """
+    gene=open(fgenes,"r")
+    dic_gene={}
+    for line in gene.readlines():
+      ll=line.split()
+      if len(ll)>2:
+        fam=ll[1].split("|")[0]
+        for x in ll[2:]:
+          if '@' in x:
+            dic_gene[x]=fam
+      
+    gene.close()
+    return dic_gene
+
   ###############################
   # Identification of conflicts
   ##############################
@@ -119,7 +147,10 @@ class Ancestral:
       
     return dconf
 
-
+  def family_numbers(self):
+    """ Return the ordered list of family numbers."""
+    return list(set(map(int,self.dic_gene.values())))
+  
   ###############################
   # Conflicts categorization
   ##############################
@@ -214,33 +245,7 @@ class Ancestral:
     return("\n".join([k+" \t"+str(v) for [k,v] in dres]))
 
   #Parsing of DeCoSTAR files
-  def __get_dic_gene(self, fgenes):
-    """
-    Dictionnary of genes as {leaf label : gene family number}
-    """
-    gene=open(fgenes,"r")
-    dic_gene={}
-    for line in gene.readlines():
-      ll=line.split()
-      if len(ll)>2:
-        fam=ll[1].split("|")[0]
-        for x in ll[2:]:
-          if '@' in x:
-            dic_gene[x]=fam
-      
-    gene.close()
-    return dic_gene
 
-  def __read_genes(self, gene_file):
-    f = open(gene_file, "r")
-    for i in f.readlines():
-      line = i.split()
-      self.__dic_graph[int(line[0])].add_node((line[1],'start'))
-      self.__dic_graph[int(line[0])].add_node((line[1],'stop'))
-      self.__dic_graph[int(line[0])].add_edge((line[1],'start'),(line[1],'stop'),eq_class="gene", edge_type="gene", weight = 1)
-    f.close()
-
-    
   def __read_adj(self,adj_file):
     """
     Parsing of ancestral adjacencies file

@@ -12,7 +12,7 @@ from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
 import ancestral 
-import IO
+import iO
 
 import cycles
 
@@ -24,32 +24,58 @@ class Fix_bubbles:
     ## Diagnostic that has all information
     self.diag=diagnostic
 
-    self.gtree_files = self.diag.gtree_files
-    
+    ## list of tree files
+    self.__lfiles_gene_tree = self.diag.get_files_gene_tree()
+
+    ## dictionnary of family trees shared with diagnostic
+    self.fam_trees = self.diag.fam_trees
+
+    ## species trees shared with diagnostic
     self.species_tree=self.diag.species_tree
+
     
   ##################################################
   #### Functions for zip
   
-  ## Zip (one step) all n-cycle with duplications
-  def zip_cycles_dup(self, n):
-    c6dup=cycles.filter(self.anc, n, 2, 1)
-    zipfam=cycles.zip_dup(c6dup, self.gtree_files, self.species_tree)
+  ## Zip (one step) all duplicated families in cycles.
+  ##
+  ## ln list of cycle sizes
+  
+  def zip_cycles_dup(self, ln):
+    cndup=cycles.filter(self.diag.anc, ln, 2, 1)
+
+    cdup={}
+    for ndup in cndup.values():
+      cdup.update(ndup)
+
+    ## associate duplicated family and associated species 
+    csp={}
+    for n in ln:
+      cyN=self.diag.anc.get_cycles(n)
+      for lfam,ldup in cdup.items():
+        if lfam in cyN:
+          lsp=list(cyN[lfam].keys())
+          for fam in ldup:
+            csp[fam]=lsp
+        
+    zipfam=cycles.zip_dup(csp, self.fam_trees, self.__lfiles_gene_tree, self.species_tree)
     return(zipfam)
 
   
-  ## output gene_trees
-  ## input: dict of gene_trees, with same keys as in dfile "gene.distribution.file"
-  ## build: same file names as in dfile, in a given directory
-  ##        new file similar to content of dfile["gene.distribution.file"], but updated for new gene trees
-
   def output_gene_trees(self, gene_trees, new_directory, new_config_file):
+    """Output gene_trees.
+    
+    gene_trees: dict of gene_trees, with same keys as in dfile "gene.distribution.file"
+    new_directory: directory with new gene tree files
+    new_config_file:  file similar to content of dfile["gene.distribution.file"], but updated for new gene trees.
+    """
+
     if not os.path.exists(new_directory):
       os.mkdir(new_directory)
     
     gene_tree_file=self.diag.dfile["gene.distribution.file"]
     ftree=open(gene_tree_file,"r")
-    itf=sorted(map(lambda x:x.strip(),ftree.readlines()))
+    itf=list(map(lambda x:x.strip(),ftree.readlines()))
     ftree.close()
     
     new_distrib_lines=[]
@@ -58,7 +84,7 @@ class Fix_bubbles:
     
     for numtree in range(len(itf)):
       if ik<len(keys) and numtree==keys[ik]:
-        new_file=os.path.join(new_directory,itf[numtree][itf[numtree].rfind(os.sep)+1:])
+        new_file=os.path.join(new_directory,itf[numtree][itf[numtree].rfind(os.sep)+1:])        
         gene_trees[numtree].write(format=9,outfile=new_file)
         ik+=1
       else:
@@ -88,11 +114,11 @@ class Fix_bubbles:
   def new_param_file(self):
     dfile=self.diag.dfile
     for df in self.diag.dfile:
-      if df in ["param.file","output.dir"]:
+      if df in ["param.file","output.dir", 'gene.distribution.file']:
         dfile[df]=self.increment_suffix_in_param_file(df)
 
     paramf=open(dfile["param.file"],"w")
-    paramf.write("\n".join([k+"="+v for k,v in self.items()])+"\n")
+    paramf.write("\n".join([k+"="+v for k,v in self.diag.dfile.items()])+"\n")
     paramf.close()
 
 

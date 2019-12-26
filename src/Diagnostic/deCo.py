@@ -6,7 +6,7 @@ import subprocess
 from subprocess import call
 import os
 import sys
-import diagnostic
+import diagnostic, fix_bubbles
 
 # import matplotlib
 # matplotlib.use('Agg')
@@ -50,7 +50,7 @@ if os.path.isdir(wd_dir):
 else:
   os.chdir(os.path.dirname(wd_dir))
 
-choice=input('Use DeCoSTAR ? (y/n) :')
+choice=input('Use DeCoSTAR (y/N)? ')
 
 if choice=='y':                           
   print(path + "/DeCoSTAR parameter.file="+parameter_file)  
@@ -68,7 +68,23 @@ diag.build_ancestral()
 
 print(diag.anc)
 
-diag.output_cycles()
+output=input(' Output cycles (y/N)? ').strip()
+
+if output=="y":
+  diag.output_cycles()
+
+## Zip
+
+ziprep=input('Zip families (y/N)? ').strip()
+
+if ziprep=="y":
+  fix=fix_bubbles.Fix_bubbles(diag)
+
+  zip=fix.zip_cycles_dup(range(4,11))
+  outputdir=fix.increment_suffix_in_param_file("output.dir")
+  genedistfile=fix.increment_suffix_in_param_file("gene.distribution.file")
+  fix.output_gene_trees(zip, outputdir, genedistfile)
+  fix.new_param_file()
 
   #   ######################
   # # zip 6-cycles with duplications

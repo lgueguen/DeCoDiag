@@ -3,7 +3,7 @@
 
 import ete3
 import glob
-import sys, functools
+import sys
 
 
 def filter(anc, lsize, nbgenes, nbfam):
@@ -103,33 +103,26 @@ def zip1dup(geneTree, dup_nodes, spec_tree):
 ##
 ## return dict {family number:zipped ete3 gene Tree}
 
-## dict_dup_fam: lfam in which a gene is duplicated
-def zip_dup(dict_dup_fam, itf, spec_tree):
+## dict_dup_fam: {dup fam: [species with duplicated gene]}
+## dfam_trees: dictionnary of family trees
+## ltree_files: list of family tree files
+## spec_tree: species tree
 
-  ## get list of duplicated genes
-  famnum=set(functools.reduce(lambda a,b:a+b, dict_dup_fam.values()))
-  dupTrees={}
-  dupNames={}
-  compt=0
-  nbi=0
-  for tf in itf:
-    if compt==famnum[nbi]:
-      dupTrees[compt]=ete3.Tree(tf)
-      dupNames[compt]=tf
-      nbi+=1
-      if nbi==len(famnum):
-        break
-    compt+=1
+def zip_dup(dict_dup_fam, dfam_trees, ltree_files, spec_tree):
+
+  ## load relevant family trees
+  for fam in dict_dup_fam:
+    if not fam in dfam_trees:
+      dfam_trees[fam]=ete3.Tree(ltree_files[fam])
 
   dcorTree={}
-  for dTk in dupTrees:
+  for fam in dict_dup_fam:
     try:
-      dcorTree[dTk]=zip1dup(dupTrees[dTk], dict_dup_fam[dTk], spec_tree)
+      dcorTree[fam]=zip1dup(dfam_trees[fam], dict_dup_fam[fam], spec_tree)
     except:
-      print(dTk)
-      print(dupTrees[dTk])
-      print(dict_dup_fam[dTk])
-      print(lnodes)
+      print(fam)
+      print(dict_dup_fam[fam])
+      print(dfam_trees[fam])
       
   return(dcorTree)
   
